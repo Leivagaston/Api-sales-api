@@ -1,6 +1,7 @@
 package sale
 
 import (
+	"errors"
 	"math/rand"
 	"strings"
 	"time"
@@ -35,8 +36,11 @@ func NewService(storage Storage, logger *zap.Logger) *Service {
 // It sets CreatedAt and UpdatedAt to the current time and initializes Version to 1.
 // Returns ErrEmptyID if sale.ID is empty.
 func (s *Service) Create(sale *Sale, newSale *CreateFields) error {
+	if newSale == nil || newSale.UserID == nil || newSale.Amount == nil {
+		return errors.New("missing required fields: UserID or Amount")
+	}
 
-	statuses := []string{"pending", "completed", "cancelled"} // estados para el campo status de la venta
+	statuses := []string{"pending", "completed", "cancelled"}
 
 	sale.UserID = *newSale.UserID
 	sale.Amount = *newSale.Amount
@@ -46,12 +50,13 @@ func (s *Service) Create(sale *Sale, newSale *CreateFields) error {
 	sale.UpdatedAt = now
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	sale.Status = statuses[r.Intn(len(statuses))] // de acuerdo a al random es el estado que me da en la venta
-
+	sale.Status = statuses[r.Intn(len(statuses))]
 	sale.Version = 1
 
 	if err := s.storage.Set(sale); err != nil {
-		s.logger.Error("failed to set sale", zap.Error(err), zap.Any("sale", sale))
+		if s.logger != nil {
+			s.logger.Error("failed to set sale", zap.Error(err), zap.Any("sale", sale))
+		}
 		return err
 	}
 

@@ -64,6 +64,10 @@ func TestService_Create(t *testing.T) {
 			},
 			args: args{
 				sale: &Sale{},
+				fields: &CreateFields{
+					UserID: strPtr("user-123"),
+					Amount: floatPtr(1234.56),
+				},
 			},
 			wantErr: func(t *testing.T, err error) {
 				require.NotNil(t, err)
@@ -80,6 +84,10 @@ func TestService_Create(t *testing.T) {
 				sale: &Sale{
 					UserID: "user-123",
 					Amount: 5500.00,
+				},
+				fields: &CreateFields{
+					UserID: strPtr("user-123"),
+					Amount: floatPtr(5500.00),
 				},
 			},
 			wantErr: func(t *testing.T, err error) {
@@ -122,11 +130,17 @@ func (m *mockStorage) Set(sale *Sale) error {
 }
 
 func (m *mockStorage) Read(id string) (*Sale, error) {
-	return m.mockRead(id)
+	if m.mockRead != nil {
+		return m.mockRead(id)
+	}
+	return nil, errors.New("mockRead not implemented")
 }
 
 func (m *mockStorage) Delete(id string) error {
-	return m.mockDelete(id)
+	if m.mockDelete != nil {
+		return m.mockDelete(id)
+	}
+	return errors.New("mockDelete not implemented")
 }
 
 func strPtr(s string) *string {
