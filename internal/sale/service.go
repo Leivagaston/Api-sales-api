@@ -1,6 +1,7 @@
 package sale
 
 import (
+	"math/rand"
 	"strings"
 	"time"
 
@@ -35,12 +36,18 @@ func NewService(storage Storage, logger *zap.Logger) *Service {
 // Returns ErrEmptyID if sale.ID is empty.
 func (s *Service) Create(sale *Sale, newSale *CreateFields) error {
 
+	statuses := []string{"pending", "completed", "cancelled"} // estados para el campo status de la venta
+
 	sale.UserID = *newSale.UserID
 	sale.Amount = *newSale.Amount
 	sale.Id = uuid.NewString()
 	now := time.Now()
 	sale.CreatedAt = now
 	sale.UpdatedAt = now
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	sale.Status = statuses[r.Intn(len(statuses))] // de acuerdo a al random es el estado que me da en la venta
+
 	sale.Version = 1
 
 	if err := s.storage.Set(sale); err != nil {
@@ -69,7 +76,7 @@ func (s *Service) Update(id string, sale *UpdateFields) (*Sale, error) {
 	}
 
 	if sale.Status != nil && strings.EqualFold(*sale.Status, "pending") {
-		existing.status = *sale.Status
+		existing.Status = *sale.Status
 	}
 
 	existing.UpdatedAt = time.Now()

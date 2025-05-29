@@ -10,29 +10,30 @@ import (
 func TestService_Create_Simple(t *testing.T) {
 	s := NewService(NewLocalStorage(), nil)
 
-	input := &User{
-		Name:     "Ayrton",
-		Address:  "Pringles",
-		NickName: "Chiche",
+	input := &Sale{}
+
+	fields := &CreateFields{
+		UserID: strPtr("user-123"),
+		Amount: floatPtr(5500.00),
 	}
 
-	err := s.Create(input)
+	err := s.Create(input, fields)
 
 	require.Nil(t, err)
-	require.NotEmpty(t, input.ID)
+	require.NotEmpty(t, input.Id)
 	require.NotEmpty(t, input.CreatedAt)
 	require.NotEmpty(t, input.UpdatedAt)
 	require.Equal(t, 1, input.Version)
 
 	s = NewService(&mockStorage{
-		mockSet: func(user *User) error {
-			return errors.New("fake error trying to set user")
+		mockSet: func(user *Sale) error {
+			return errors.New("fake error trying to set sale")
 		},
 	}, nil)
 
-	err = s.Create(input)
+	err = s.Create(input, fields)
 	require.NotNil(t, err)
-	require.EqualError(t, err, "fake error trying to set user")
+	require.EqualError(t, err, "fake error trying to set sale")
 }
 
 func TestService_Create(t *testing.T) {
@@ -41,7 +42,8 @@ func TestService_Create(t *testing.T) {
 	}
 
 	type args struct {
-		user *User
+		sale   *Sale
+		fields *CreateFields
 	}
 
 	tests := []struct {
@@ -49,25 +51,25 @@ func TestService_Create(t *testing.T) {
 		fields   fields
 		args     args
 		wantErr  func(t *testing.T, err error)
-		wantUser func(t *testing.T, user *User)
+		wantSale func(t *testing.T, sale *Sale)
 	}{
 		{
 			name: "error",
 			fields: fields{
 				storage: &mockStorage{
-					mockSet: func(user *User) error {
+					mockSet: func(sale *Sale) error {
 						return errors.New("fake error trying to set user")
 					},
 				},
 			},
 			args: args{
-				user: &User{},
+				sale: &Sale{},
 			},
 			wantErr: func(t *testing.T, err error) {
 				require.NotNil(t, err)
 				require.EqualError(t, err, "fake error trying to set user")
 			},
-			wantUser: nil,
+			wantSale: nil,
 		},
 		{
 			name: "success",
@@ -75,17 +77,16 @@ func TestService_Create(t *testing.T) {
 				storage: NewLocalStorage(),
 			},
 			args: args{
-				user: &User{
-					Name:     "Ayrton",
-					Address:  "Pringles",
-					NickName: "Chiche",
+				sale: &Sale{
+					UserID: "user-123",
+					Amount: 5500.00,
 				},
 			},
 			wantErr: func(t *testing.T, err error) {
 				require.Nil(t, err)
 			},
-			wantUser: func(t *testing.T, input *User) {
-				require.NotEmpty(t, input.ID)
+			wantSale: func(t *testing.T, input *Sale) {
+				require.NotEmpty(t, input.Id)
 				require.NotEmpty(t, input.CreatedAt)
 				require.NotEmpty(t, input.UpdatedAt)
 				require.Equal(t, 1, input.Version)
@@ -98,32 +99,40 @@ func TestService_Create(t *testing.T) {
 				storage: tt.fields.storage,
 			}
 
-			err := s.Create(tt.args.user)
+			err := s.Create(tt.args.sale, tt.args.fields)
 			if tt.wantErr != nil {
 				tt.wantErr(t, err)
 			}
 
-			if tt.wantUser != nil {
-				tt.wantUser(t, tt.args.user)
+			if tt.wantSale != nil {
+				tt.wantSale(t, tt.args.sale)
 			}
 		})
 	}
 }
 
 type mockStorage struct {
-	mockSet    func(user *User) error
-	mockRead   func(id string) (*User, error)
+	mockSet    func(sale *Sale) error
+	mockRead   func(id string) (*Sale, error)
 	mockDelete func(id string) error
 }
 
-func (m *mockStorage) Set(user *User) error {
-	return m.mockSet(user)
+func (m *mockStorage) Set(sale *Sale) error {
+	return m.mockSet(sale)
 }
 
-func (m *mockStorage) Read(id string) (*User, error) {
+func (m *mockStorage) Read(id string) (*Sale, error) {
 	return m.mockRead(id)
 }
 
 func (m *mockStorage) Delete(id string) error {
 	return m.mockDelete(id)
+}
+
+func strPtr(s string) *string {
+	return &s
+}
+
+func floatPtr(f float64) *float64 {
+	return &f
 }

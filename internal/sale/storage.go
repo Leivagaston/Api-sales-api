@@ -2,45 +2,45 @@ package sale
 
 import "errors"
 
-// ErrNotFound is returned when a user with the given ID is not found.
-var ErrNotFound = errors.New("user not found")
+// ErrNotFound is returned when a sale with the given ID is not found.
+var ErrNotFound = errors.New("sale not found")
 
-// ErrEmptyID is returned when trying to store a user with an empty ID.
-var ErrEmptyID = errors.New("empty user ID")
+// ErrEmptyID is returned when trying to store a sale with an empty ID.
+var ErrEmptyID = errors.New("empty sale ID")
 
 // Storage is the main interface for our storage layer.
 type Storage interface {
-	Set(user *User) error
-	Read(id string) (*User, error)
+	Set(sale *Sale) error
+	Read(id string) (*Sale, error)
 	Delete(id string) error
 }
 
-// LocalStorage provides an in-memory implementation for storing users.
+// LocalStorage provides an in-memory implementation for storing sales.
 type LocalStorage struct {
-	m map[string]*User
+	m map[string]*Sale
 }
 
 // NewLocalStorage instantiates a new LocalStorage with an empty map.
 func NewLocalStorage() *LocalStorage {
 	return &LocalStorage{
-		m: map[string]*User{},
+		m: map[string]*Sale{},
 	}
 }
 
-// Set stores or updates a user in the local storage.
-// Returns ErrEmptyID if the user has an empty ID.
-func (l *LocalStorage) Set(user *User) error {
-	if user.ID == "" {
+// Set stores or updates a sale in the local storage.
+// Returns ErrEmptyID if the sale has an empty ID.
+func (l *LocalStorage) Set(sale *Sale) error {
+	if sale.Id == "" {
 		return ErrEmptyID
 	}
 
-	l.m[user.ID] = user
+	l.m[sale.Id] = sale
 	return nil
 }
 
-// Read retrieves a user from the local storage by ID.
-// Returns ErrNotFound if the user is not found.
-func (l *LocalStorage) Read(id string) (*User, error) {
+// Read retrieves a sale from the local storage by ID.
+// Returns ErrNotFound if the sale is not found.
+func (l *LocalStorage) Read(id string) (*Sale, error) {
 	u, ok := l.m[id]
 	if !ok {
 		return nil, ErrNotFound
@@ -49,8 +49,8 @@ func (l *LocalStorage) Read(id string) (*User, error) {
 	return u, nil
 }
 
-// Delete removes a user from the local storage by ID.
-// Returns ErrNotFound if the user does not exist.
+// Delete removes a sale from the local storage by ID.
+// Returns ErrNotFound if the sale does not exist.
 func (l *LocalStorage) Delete(id string) error {
 	_, err := l.Read(id)
 	if err != nil {
