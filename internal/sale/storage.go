@@ -12,6 +12,7 @@ var ErrEmptyID = errors.New("empty sale ID")
 type Storage interface {
 	Set(sale *Sale) error
 	Read(id string) (*Sale, error)
+	ReadAllByUserID(id string) []Sale
 	Delete(id string) error
 }
 
@@ -47,6 +48,18 @@ func (l *LocalStorage) Read(id string) (*Sale, error) {
 	}
 
 	return u, nil
+}
+
+// Read retrieves all sales from the local storage by user ID.
+// Returns ErrNotFound if the sale is not found.
+func (l *LocalStorage) ReadAllByUserID(id string) []Sale {
+	var result []Sale
+	for _, sale := range l.m {
+		if sale != nil && sale.UserID == id {
+			result = append(result, *sale)
+		}
+	}
+	return result
 }
 
 // Delete removes a sale from the local storage by ID.

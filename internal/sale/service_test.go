@@ -120,9 +120,10 @@ func TestService_Create(t *testing.T) {
 }
 
 type mockStorage struct {
-	mockSet    func(sale *Sale) error
-	mockRead   func(id string) (*Sale, error)
-	mockDelete func(id string) error
+	mockSet             func(sale *Sale) error
+	mockRead            func(id string) (*Sale, error)
+	mockReadAllByUserID func(id string) []Sale
+	mockDelete          func(id string) error
 }
 
 func (m *mockStorage) Set(sale *Sale) error {

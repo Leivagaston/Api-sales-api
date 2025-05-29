@@ -65,10 +65,27 @@ func (s *Service) Create(sale *Sale, newSale *CreateFields) error {
 
 // Get retrieves a sale by its ID.
 // Returns ErrNotFound if no sale exists with the given ID.
-func (s *Service) Get(user_id string, status string) (*Sale, error) {
-	return s.storage.Read(user_id)
+func (s *Service) Get(user_id string, status string) (SaleResponse, error) {
+	sales := s.storage.ReadAllByUserID(user_id)
+	var sale_response SaleResponse
 
-	//una vez que recibo todas las ventas asociadas al user_id hago un filtro por status
+	for _, sale := range sales {
+		if status == "" || sale.Status == status {
+			sale_response.Results = append(sale_response.Results, sale)
+			switch sale.Status {
+			case "approved":
+				sale_response.Metadata.Approved++
+			case "rejected":
+				sale_response.Metadata.Rejected++
+			case "pending":
+				sale_response.Metadata.Pending++
+			default:
+			}
+			sale_response.Metadata.TotalAmount += sale.Amount
+		}
+	}
+
+	return sale_response, nil
 }
 
 // Update modifies an existing sale's data.

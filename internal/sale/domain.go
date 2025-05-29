@@ -23,3 +23,16 @@ type CreateFields struct {
 	UserID *string  `json:"user_id"`
 	Amount *float64 `json:"amount"`
 }
+
+type Metadata struct {
+	Quantity    int     `json:"quantity"`
+	Approved    int     `json:"approved"`
+	Rejected    int     `json:"rejected"`
+	Pending     int     `json:"pending"`
+	TotalAmount float64 `json:"total_amount"`
+}
+
+type SaleResponse struct {
+	Metadata Metadata `json:"metadata"`
+	Results  []Sale   `json:"results"`
+}
