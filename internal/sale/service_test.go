@@ -26,7 +26,7 @@ func TestService_Create_Simple(t *testing.T) {
 	require.Equal(t, 1, input.Version)
 
 	s = NewService(&mockStorage{
-		mockSet: func(user *Sale) error {
+		mockSet: func(sale *Sale) error {
 			return errors.New("fake error trying to set sale")
 		},
 	}, nil)
@@ -58,7 +58,7 @@ func TestService_Create(t *testing.T) {
 			fields: fields{
 				storage: &mockStorage{
 					mockSet: func(sale *Sale) error {
-						return errors.New("fake error trying to set user")
+						return errors.New("fake error trying to set sale")
 					},
 				},
 			},
@@ -71,7 +71,7 @@ func TestService_Create(t *testing.T) {
 			},
 			wantErr: func(t *testing.T, err error) {
 				require.NotNil(t, err)
-				require.EqualError(t, err, "fake error trying to set user")
+				require.EqualError(t, err, "fake error trying to set sale")
 			},
 			wantSale: nil,
 		},
@@ -142,6 +142,13 @@ func (m *mockStorage) Delete(id string) error {
 		return m.mockDelete(id)
 	}
 	return errors.New("mockDelete not implemented")
+}
+
+func (m *mockStorage) ReadAllByUserID(id string) []Sale {
+	if m.mockReadAllByUserID != nil {
+		return m.mockReadAllByUserID(id)
+	}
+	return nil
 }
 
 func strPtr(s string) *string {
